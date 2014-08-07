@@ -52,8 +52,7 @@ if (isset($graderreportsilast)) {
 }
 
 $PAGE->set_url(new moodle_url('/grade/report/grader/index.php', array('id'=>$courseid)));
-//$PAGE->requires->yui_module('moodle-gradereport_grader-scrollview', 'M.gradereport_grader.scrollview.init');
-$PAGE->requires->yui_module('moodle-gradereport_grader-gradereporttable', 'M.gradereport_grader.gradereporttable.init', array());
+$PAGE->requires->yui_module('moodle-gradereport_grader-gradereporttable', 'Y.M.gradereport_grader.init');
 
 // basic access checks
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
