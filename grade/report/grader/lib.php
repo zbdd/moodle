@@ -635,7 +635,6 @@ class grade_report_grader extends grade_report {
 
             $usercell = new html_table_cell();
             $usercell->attributes['class'] = 'user';
-            $usercell->attributes['data-uid'] = $userid;
 
             $usercell->header = true;
             $usercell->scope = 'row';
@@ -645,7 +644,9 @@ class grade_report_grader extends grade_report {
             }
 
             $fullname = fullname($user);
-            $usercell->text .= html_writer::link(new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->course->id)), $fullname);
+            $usercell->text .= html_writer::link(new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->course->id)), $fullname, array(
+                'class' => 'username',
+            ));
 
             if (!empty($user->suspendedenrolment)) {
                 $usercell->attributes['class'] .= ' usersuspended';
@@ -681,6 +682,7 @@ class grade_report_grader extends grade_report {
                 $userrow->cells[] = $fieldcell;
             }
 
+            $userrow->attributes['data-uid'] = $userid;
             $rows[] = $userrow;
         }
 
@@ -921,9 +923,9 @@ class grade_report_grader extends grade_report {
                 }
 
                 if (!empty($grade->feedback)) {
-                    //should we be truncating feedback? ie $short_feedback = shorten_text($feedback, $this->feedback_trunc_length);
-                    $jsarguments['feedback'][] = array('user'=>$userid, 'item'=>$itemid, 'content'=>wordwrap(trim(format_string($grade->feedback, $grade->feedbackformat)),
-                            34, '<br/ >'));
+                    $feedback = wordwrap(trim(format_string($grade->feedback, $grade->feedbackformat)), 34, '<br>');
+                    $itemcell->attributes['data-feedback'] = $feedback;
+                    $jsarguments['feedback'][] = array('user'=>$userid, 'item'=>$itemid, 'content' => $feedback);
                 }
 
                 if ($grade->is_excluded()) {
