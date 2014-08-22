@@ -739,7 +739,8 @@ FloatingHeaders.prototype = {
             left:       this.tableFooterRow.getX() + 'px',
             bottom:     0,
             height:     this._getHeight(this.tableFooterRow),
-            width:      footerWidth + 'px'
+            width:      footerWidth + 'px',
+            borderBottomWidth: Y.DOM.getScrollbarWidth() + 'px'
         });
 
         // Append to the grader region.
@@ -794,11 +795,12 @@ FloatingHeaders.prototype = {
             footerStyles.left = this.headerCell.getX();
 
             // Determine whether the footer should now be shown as sticky.
-            var pageHeight = Y.config.win.pageYOffset + Y.config.win.innerHeight;
-            if (pageHeight - this.pageHeaderHeight < this.footerRowPosition) {
+            var pageHeight = Y.config.win.pageYOffset + Y.config.win.innerHeight,
+                usablePageHeight = pageHeight - Y.DOM.getScrollbarWidth();
+            if (usablePageHeight - this.pageHeaderHeight < this.footerRowPosition) {
                 // The footer is off the bottom of the page.
                 this.footerRow.addClass(CSS.STICKYFOOTER);
-                if (pageHeight - this.pageHeaderHeight > this.firstUserCellBottom) {
+                if (usablePageHeight - this.pageHeaderHeight > this.firstUserCellBottom) {
                     // The footer is above the bottom of the first user.
                     footerStyles.top = (pageHeight - this.footerRow.get(OFFSETHEIGHT)) + 'px';
                 } else {
