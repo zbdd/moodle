@@ -188,9 +188,6 @@ FloatingHeaders.prototype = {
         // Setup the event handlers.
         this._setupEventHandlers();
 
-        // Hide the loading spinner - we've finished for the moment.
-        this._hideSpinner();
-
         return this;
     },
 
@@ -261,28 +258,6 @@ FloatingHeaders.prototype = {
             Y.one(Y.config.win).on('resize', this._handleResizeEvent, this),
             Y.one(Y.config.win).on('orientationchange', this._handleResizeEvent, this)
         );
-    },
-
-    /**
-     * Show the loading spinner.
-     *
-     * @method _showSpinner
-     * @protected
-     */
-    _showSpinner: function() {
-        // Show the grading spinner.
-        Y.one(SELECTORS.SPINNER).show();
-    },
-
-    /**
-     * Hide the loading spinner.
-     *
-     * @method _hideSpinner
-     * @protected
-     */
-    _hideSpinner: function() {
-        // Hide the grading spinner.
-        Y.one(SELECTORS.SPINNER).hide();
     },
 
     /**

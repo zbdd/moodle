@@ -193,15 +193,6 @@ if ($USER->gradeediting[$course->id] && ($report->get_pref('showquickfeedback') 
     echo $reporthtml;
 }
 
-// Render a loading screen.
-$loading = html_writer::div(
-            html_writer::div(
-                '<i></i><i></i><i></i><i></i>', 'gradebook-loading'
-            ), 'gradebook-loading-screen', array('aria-hidden' => 'true')
-        );
-
-echo $loading;
-
 // prints paging bar at bottom for large pages
 if (!empty($studentsperpage) && $studentsperpage >= 20) {
     echo $OUTPUT->paging_bar($numusers, $report->page, $studentsperpage, $report->pbarurl);

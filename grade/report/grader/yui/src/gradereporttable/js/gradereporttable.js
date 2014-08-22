@@ -34,7 +34,6 @@ var SELECTORS = {
         GRADEPARENT: '.gradeparent',
         HEADERCELL: '.gradebook-header-cell',
         STUDENTHEADER: '#studentheader',
-        SPINNER: '.gradebook-loading-screen',
         USERCELL: '#user-grades .user.cell'
     },
     CSS = {
