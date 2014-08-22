@@ -41,7 +41,6 @@
 .gradeparent tr.heading th.courseitem,
 .gradeparent tr.heading th.userfield,
 #studentheader {
-    /* border-left: 1px solid #ddd; */
     white-space: nowrap;
     background-color: #333;
 }
