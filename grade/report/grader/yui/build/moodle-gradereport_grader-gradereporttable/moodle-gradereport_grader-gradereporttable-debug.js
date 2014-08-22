@@ -916,12 +916,12 @@ function Tooltip() {}
 Tooltip.ATTRS= {
 };
 
-CONTENT = '<div class="graderreportoverlay {{overridden}}" role="tooltip" aria-describedby="{{id}}">' +
-              '<div class="fullname">{{username}}</div><div class="itemname">{{itemname}}</div>' +
-              '{{#if feedback}}' +
-                  '<div class="feedback">{{feedback}}</div>' +
-              '{{/if}}' +
-          '</div>';
+var CONTENT =   '<div class="graderreportoverlay {{overridden}}" role="tooltip" aria-describedby="{{id}}">' +
+                    '<div class="fullname">{{username}}</div><div class="itemname">{{itemname}}</div>' +
+                    '{{#if feedback}}' +
+                        '<div class="feedback">{{feedback}}</div>' +
+                    '{{/if}}' +
+                '</div>';
 
 Tooltip.prototype = {
     /**
