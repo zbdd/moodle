@@ -664,7 +664,7 @@ class core_moodlelib_testcase extends advanced_testcase {
         $CFG->extendedusernamechars = true;
         $this->assertSame('john_doe', clean_param('john_doe', PARAM_USERNAME));
         $this->assertSame('john@doe', clean_param('john@doe', PARAM_USERNAME));
-        $this->assertSame(clean_param('john# $%&()+_^', PARAM_USERNAME), 'john#$%&()+_^');
+        $this->assertSame(clean_param('john# $%&()+_^', PARAM_USERNAME), 'john# $%&()+_^');
         $this->assertSame('john~doe', clean_param('john~doe', PARAM_USERNAME));
         $this->assertSame('john´doe', clean_param('joHN´doe', PARAM_USERNAME));
         $this->assertSame('johndoe', clean_param('johnDOE', PARAM_USERNAME));
