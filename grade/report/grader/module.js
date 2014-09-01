@@ -222,7 +222,20 @@ M.gradereport_grader.classes.ajax.prototype.make_editable = function(e) {
             break;
     }
     this.current.replace().attach_key_events();
+
 };
+/**
+ * Handles escaping from cell on keypress
+ *
+ * @function
+ * @this {M.gradereport_grader.classes.existingfield}
+ * @param {Event} e
+ */
+M.gradereport_grader.classes.ajax.prototype.keypress_escape = function(e) {
+    this.current.revert();
+    this.grade = this.oldfeedback; 
+    this.current = null;
+}
 /**
  * Callback function for the user pressing the enter key on an editable field
  *
@@ -627,7 +640,7 @@ M.gradereport_grader.classes.existingfield = function(ajax, userid, itemid) {
         this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.grade, 'press:9+shift', this));                // Handle Shift+Tab
         this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.feedback, 'press:9', this, true));                   // Handle Tab
         this.keyevents.push(this.report.Y.on('key', this.keypress_enter, this.feedback, 'press:13', this));                // Handle the Enter key being pressed
-        this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.feedback, 'press:37,38,39,40+ctrl', this)); // Handle CTRL + arrow keys
+        this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.feedback, 'down:37,38,39,40+ctrl', this)); // Handle CTRL + arrow keys
 
         // Override the default tab movements for fields in the same cell
         this.keyevents.push(this.report.Y.on('key', function(e){e.preventDefault();this.grade.focus();}, this.feedback, 'press:9+shift', this));
@@ -636,7 +649,7 @@ M.gradereport_grader.classes.existingfield = function(ajax, userid, itemid) {
         this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.grade, 'press:9', this));                      // Handle Tab and Shift+Tab
     }
     this.keyevents.push(this.report.Y.on('key', this.keypress_enter, this.grade, 'press:13', this));                   // Handle the Enter key being pressed
-    this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.grade, 'press:37,38,39,40+ctrl', this));    // Handle CTRL + arrow keys
+    this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.grade, 'down:37,38,39,40+ctrl', this));    // Handle CTRL + arrow keys
 };
 /**
  * Attach the required properties and methods to the existing field class
@@ -979,10 +992,12 @@ M.gradereport_grader.classes.textfield.prototype.attach_key_events = function() 
         this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.grade, 'press:9+shift', a));               // Handle Shift+Tab
         this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.feedback, 'press:9', a, true));            // Handle Tab
         this.keyevents.push(this.report.Y.on('key', a.keypress_enter, this.feedback, 'press:13', a));               // Handle the Enter key being pressed
+        this.keyevents.push(this.report.Y.on('key', a.keypress_escape, this.feedback, 'down:27', a));                   // Handle the Esc key being pressed
     } else {
         this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.grade, 'press:9', a));                     // Handle Tab and Shift+Tab
     }
     this.keyevents.push(this.report.Y.on('key', a.keypress_enter, this.grade, 'press:13', a));                      // Handle the Enter key being pressed
+    this.keyevents.push(this.report.Y.on('key', a.keypress_escape, this.grade, 'down:27', a));                   // Handle the Esc key being pressed
     // Setup the arrow key events
     this.keyevents.push(this.report.Y.on('key', a.keypress_arrows, this.grade.ancestor('td'), 'down:37,38,39,40+ctrl', a));       // Handle CTRL + arrow keys
     // Prevent the default key action on all fields for arrow keys on all key events!

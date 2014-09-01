@@ -86,9 +86,6 @@ Y.extend(ReportTable, Y.Base, {
 
         // Setup the mouse tooltips.
         this.setupTooltips();
-
-        // Hide the loading spinner - we've finished for the moment.
-        this._hideSpinner();
     },
 
     /**
