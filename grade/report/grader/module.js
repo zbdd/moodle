@@ -3,10 +3,6 @@
  */
 M.gradereport_grader = {
     /**
-     * @param {Array} reports An array of instantiated report objects
-     */
-    reports : [],
-    /**
      * @namespace M.gradereport_grader
      * @param {Object} reports A collection of classes used by the grader report module
      */
@@ -16,16 +12,15 @@ M.gradereport_grader = {
      *
      * @function
      * @param {YUI} Y
-     * @param {String} id The id attribute of the reports table
      * @param {Object} cfg A configuration object
      * @param {Array} An array of items in the report
      * @param {Array} An array of users on the report
      * @param {Array} An array of feedback objects
      * @param {Array} An array of student grades
      */
-    init_report : function(Y, id, cfg, items, users, feedback, grades) {
+    init_report : function(Y, cfg, items, users, feedback, grades) {
         // Create the actual report
-        this.reports[id] = new this.classes.report(Y, id, cfg, items, users, feedback, grades);
+        new this.classes.report(Y, cfg, items, users, feedback, grades);
     }
 };
 
@@ -41,13 +36,12 @@ M.gradereport_grader = {
  * @constructor
  * @this {M.gradereport_grader}
  * @param {YUI} Y
- * @param {int} id The id of the table to attach the report to
  * @param {Object} cfg Configuration variables
  * @param {Array} items An array containing grade items
  * @param {Array} users An array containing user information
  * @param {Array} feedback An array containing feedback information
  */
-M.gradereport_grader.classes.report = function(Y, id, cfg, items, users, feedback, grades) {
+M.gradereport_grader.classes.report = function(Y, cfg, items, users, feedback, grades) {
     this.Y = Y;
     this.isediting = (cfg.isediting);
     this.ajaxenabled = (cfg.ajaxenabled);
@@ -222,7 +216,20 @@ M.gradereport_grader.classes.ajax.prototype.make_editable = function(e) {
             break;
     }
     this.current.replace().attach_key_events();
+
 };
+/**
+ * Handles escaping from cell on keypress
+ *
+ * @function
+ * @this {M.gradereport_grader.classes.ajax}
+ * @param {Event} e
+ */
+M.gradereport_grader.classes.ajax.prototype.keypress_escape = function(e) {
+    this.current.revert();
+    this.grade = this.oldfeedback; 
+    this.current = null;
+}
 /**
  * Callback function for the user pressing the enter key on an editable field
  *
@@ -627,7 +634,7 @@ M.gradereport_grader.classes.existingfield = function(ajax, userid, itemid) {
         this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.grade, 'press:9+shift', this));                // Handle Shift+Tab
         this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.feedback, 'press:9', this, true));                   // Handle Tab
         this.keyevents.push(this.report.Y.on('key', this.keypress_enter, this.feedback, 'press:13', this));                // Handle the Enter key being pressed
-        this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.feedback, 'press:37,38,39,40+ctrl', this)); // Handle CTRL + arrow keys
+        this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.feedback, 'down:37,38,39,40+ctrl', this)); // Handle CTRL + arrow keys
 
         // Override the default tab movements for fields in the same cell
         this.keyevents.push(this.report.Y.on('key', function(e){e.preventDefault();this.grade.focus();}, this.feedback, 'press:9+shift', this));
@@ -636,7 +643,7 @@ M.gradereport_grader.classes.existingfield = function(ajax, userid, itemid) {
         this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.grade, 'press:9', this));                      // Handle Tab and Shift+Tab
     }
     this.keyevents.push(this.report.Y.on('key', this.keypress_enter, this.grade, 'press:13', this));                   // Handle the Enter key being pressed
-    this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.grade, 'press:37,38,39,40+ctrl', this));    // Handle CTRL + arrow keys
+    this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.grade, 'down:37,38,39,40+ctrl', this));    // Handle CTRL + arrow keys
 };
 /**
  * Attach the required properties and methods to the existing field class
@@ -789,9 +796,9 @@ M.gradereport_grader.classes.textfield = function(report, node) {
     this.report = report;
     this.node = node;
     this.gradespan = node.one('.gradevalue');
-    this.inputdiv = this.report.Y.Node.create('<div></div>');
+    this.inputdiv = this.report.Y.Node.create('<span></span>');
     this.editfeedback = this.report.ajax.showquickfeedback;
-    this.grade = this.report.Y.Node.create('<input type="text" class="text" value="" />');
+    this.grade = this.report.Y.Node.create('<input type="text" class="text" value="" size="7" />');
     this.gradetype = 'value';
     this.inputdiv.append(this.grade);
     if (this.report.ajax.showquickfeedback) {
@@ -979,10 +986,12 @@ M.gradereport_grader.classes.textfield.prototype.attach_key_events = function() 
         this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.grade, 'press:9+shift', a));               // Handle Shift+Tab
         this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.feedback, 'press:9', a, true));            // Handle Tab
         this.keyevents.push(this.report.Y.on('key', a.keypress_enter, this.feedback, 'press:13', a));               // Handle the Enter key being pressed
+        this.keyevents.push(this.report.Y.on('key', a.keypress_escape, this.feedback, 'down:27', a));                   // Handle the Esc key being pressed
     } else {
         this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.grade, 'press:9', a));                     // Handle Tab and Shift+Tab
     }
     this.keyevents.push(this.report.Y.on('key', a.keypress_enter, this.grade, 'press:13', a));                      // Handle the Enter key being pressed
+    this.keyevents.push(this.report.Y.on('key', a.keypress_escape, this.grade, 'down:27', a));                   // Handle the Esc key being pressed
     // Setup the arrow key events
     this.keyevents.push(this.report.Y.on('key', a.keypress_arrows, this.grade.ancestor('td'), 'down:37,38,39,40+ctrl', a));       // Handle CTRL + arrow keys
     // Prevent the default key action on all fields for arrow keys on all key events!
