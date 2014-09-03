@@ -169,7 +169,6 @@
     font-weight: bold;
     color: red;
     font-size: 9px;
-    float: left;
 }
 .dir-rtl .gradeparent .excludedfloater {
     float: right;

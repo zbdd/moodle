@@ -226,8 +226,19 @@ M.gradereport_grader.classes.ajax.prototype.make_editable = function(e) {
  * @param {Event} e
  */
 M.gradereport_grader.classes.ajax.prototype.keypress_escape = function(e) {
+   this.editing_cancelled();
+}
+/**
+ * Deselect cell and revert changes
+ *
+ * @function
+ * @this {M.gradereport_grader.classes.ajax}
+ * @param {Event} e
+ */
+M.gradereport_grader.classes.ajax.prototype.editing_cancelled = function() {
     this.current.revert();
-    this.grade = this.oldfeedback; 
+    this.grade = this.oldgrade; 
+    this.feedback = this.oldfeedback; 
     this.current = null;
 }
 /**
@@ -269,6 +280,16 @@ M.gradereport_grader.classes.ajax.prototype.keypress_tab = function(e, ignoreshi
 M.gradereport_grader.classes.ajax.prototype.keypress_arrows = function(e) {
     e.preventDefault();
     var next = null;
+    if (right_to_left()) {
+        switch (e.keyCode) {
+            case 37:
+                e.keyCode = 39; // Right
+                break;
+            case 39:
+                e.keyCode = 37; // Left
+                break;
+        }
+    }
     switch (e.keyCode) {
         case 37:    // Left
             next = this.get_prev_cell();
@@ -305,7 +326,7 @@ M.gradereport_grader.classes.ajax.prototype.process_editable_field = function(ne
     if (next) {
         this.make_editable(next, null);
     }
-};
+}
 /**
  * Gets the next cell that is editable (right)
  * @function
@@ -631,16 +652,16 @@ M.gradereport_grader.classes.existingfield = function(ajax, userid, itemid) {
         this.feedback.on('blur', this.submit, this);
 
         // Override the default tab movements when moving between cells
-        this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.grade, 'press:9+shift', this));                // Handle Shift+Tab
-        this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.feedback, 'press:9', this, true));                   // Handle Tab
+        this.keyevents.push(this.feedback.on('key', this.keypress_tab, 'down:9+shift', this));                // Handle Shift+Tab
+        this.keyevents.push(this.grade.on('key', this.keypress_tab, 'down:9', this));                      // Handle Tab and Shift+Tab
         this.keyevents.push(this.report.Y.on('key', this.keypress_enter, this.feedback, 'press:13', this));                // Handle the Enter key being pressed
         this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.feedback, 'down:37,38,39,40+ctrl', this)); // Handle CTRL + arrow keys
 
         // Override the default tab movements for fields in the same cell
         this.keyevents.push(this.report.Y.on('key', function(e){e.preventDefault();this.grade.focus();}, this.feedback, 'press:9+shift', this));
-        this.keyevents.push(this.report.Y.on('key', function(e){if (e.shiftKey) {return;}e.preventDefault();this.feedback.focus();}, this.grade, 'press:9', this));
+        this.keyevents.push(this.report.Y.on('key', function(e){if (e.shiftKey) {return;}e.preventDefault();this.feedback.focus();}, this.grade, 'down:9', this));
     } else {
-        this.keyevents.push(this.report.Y.on('key', this.keypress_tab, this.grade, 'press:9', this));                      // Handle Tab and Shift+Tab
+        this.keyevents.push(this.grade.on('key', this.keypress_tab, 'down:9', this));                      // Handle Tab and Shift+Tab
     }
     this.keyevents.push(this.report.Y.on('key', this.keypress_enter, this.grade, 'press:13', this));                   // Handle the Enter key being pressed
     this.keyevents.push(this.report.Y.on('key', this.keypress_arrows, this.grade, 'down:37,38,39,40+ctrl', this));    // Handle CTRL + arrow keys
@@ -696,6 +717,16 @@ M.gradereport_grader.classes.existingfield.prototype.keypress_tab = function(e, 
  */
 M.gradereport_grader.classes.existingfield.prototype.keypress_arrows = function(e) {
     var next = null;
+    if (right_to_left()) {
+        switch (e.keyCode) {
+            case 37:
+                e.keyCode = 39; // Right
+                break;
+            case 39:
+                e.keyCode = 37; // Left
+                break;
+        }
+    }
     switch (e.keyCode) {
         case 37:    // Left
             next = this.report.ajax.get_prev_cell(this.grade.ancestor('td'));
@@ -755,7 +786,6 @@ M.gradereport_grader.classes.existingfield.prototype.submit = function() {
     if (!this.has_changed()) {
         return;
     }
-
     var properties = this.report.get_cell_info([this.userid,this.itemid]);
     var values = (function(f){
         var feedback, oldfeedback = null;
@@ -798,7 +828,7 @@ M.gradereport_grader.classes.textfield = function(report, node) {
     this.gradespan = node.one('.gradevalue');
     this.inputdiv = this.report.Y.Node.create('<span></span>');
     this.editfeedback = this.report.ajax.showquickfeedback;
-    this.grade = this.report.Y.Node.create('<input type="text" class="text" value="" size="7" />');
+    this.grade = this.report.Y.Node.create('<input type="text" class="text" value="" />');
     this.gradetype = 'value';
     this.inputdiv.append(this.grade);
     if (this.report.ajax.showquickfeedback) {
@@ -983,12 +1013,8 @@ M.gradereport_grader.classes.textfield.prototype.attach_key_events = function() 
     var a = this.report.ajax;
     // Setup the default key events for tab and enter
     if (this.editfeedback) {
-        this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.grade, 'press:9+shift', a));               // Handle Shift+Tab
-        this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.feedback, 'press:9', a, true));            // Handle Tab
         this.keyevents.push(this.report.Y.on('key', a.keypress_enter, this.feedback, 'press:13', a));               // Handle the Enter key being pressed
         this.keyevents.push(this.report.Y.on('key', a.keypress_escape, this.feedback, 'down:27', a));                   // Handle the Esc key being pressed
-    } else {
-        this.keyevents.push(this.report.Y.on('key', a.keypress_tab, this.grade, 'press:9', a));                     // Handle Tab and Shift+Tab
     }
     this.keyevents.push(this.report.Y.on('key', a.keypress_enter, this.grade, 'press:13', a));                      // Handle the Enter key being pressed
     this.keyevents.push(this.report.Y.on('key', a.keypress_escape, this.grade, 'down:27', a));                   // Handle the Esc key being pressed
