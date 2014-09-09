@@ -164,11 +164,10 @@ class block_course_overview_renderer extends plugin_renderer_base {
             $modulename = get_string('modulename', $module);
             $icontext = html_writer::link($url, $this->output->pix_icon('icon', $modulename, 'mod_'.$module, array('class'=>'iconlarge')));
             if (get_string_manager()->string_exists("activityoverview", $module)) {
-                $icontext .= get_string("activityoverview", $module);
+                $icontext .= html_writer::tag('a', get_string("activityoverview", $module), array('href' => $url));
             } else {
                 $icontext .= get_string("activityoverview", 'block_course_overview', $modulename);
             }
-
             // Add collapsible region with overview text in it.
             $output .= $this->collapsible_region($overview[$module], '', 'region_'.$cid.'_'.$module, $icontext, '', true);
 
