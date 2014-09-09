@@ -409,13 +409,12 @@ function assign_print_overview($courses, &$htmlarray) {
                                               LEFT JOIN {assign_grades} g ON
                                                   s.userid = g.userid AND
                                                   s.assignment = g.assignment AND
-                                                  g.attemptnumber = smx.maxattempt
+                                                  g.attemptnumber = s.attemptnumber
                                               WHERE
                                                   ( g.timemodified is NULL OR
                                                   s.timemodified > g.timemodified ) AND
                                                   s.timemodified IS NOT NULL AND
                                                   s.status = ? AND
-                                                  s.attemptnumber = smx.maxattempt AND
                                                   s.assignment ' . $sqlassignmentids, $dbparams);
 
                 $unmarkedsubmissions = array();
@@ -442,6 +441,8 @@ function assign_print_overview($courses, &$htmlarray) {
                         '<a href="' . $url . '">' .
                         get_string('submissionsnotgraded', 'assign', $submissions) .
                         '</a></div>';
+            } else {
+                continue;
             }
         }
         if (has_capability('mod/assign:submit', $context)) {
@@ -496,6 +497,9 @@ function assign_print_overview($courses, &$htmlarray) {
                 $str .= ', ' . get_string('graded', 'assign');
             }
             $str .= '</div>';
+            if ($submission->status == "submitted") {
+                continue;
+            }
         }
         $str .= '</div>';
         if (empty($htmlarray[$assignment->course]['assign'])) {
