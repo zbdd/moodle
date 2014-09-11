@@ -23,6 +23,7 @@
  */
 defined('MOODLE_INTERNAL') || die;
 
+require_once('activity_form.php');
 /**
  * Course_overview block rendrer
  *
@@ -157,22 +158,12 @@ class block_course_overview_renderer extends plugin_renderer_base {
      * @return string html of activities overview
      */
     protected function activity_display($cid, $overview) {
-        $output = html_writer::start_tag('div', array('class' => 'activity_info'));
+        $output = html_writer::start_tag('div', array('class' => 'activity_overview'));
+
         foreach (array_keys($overview) as $module) {
-            $output .= html_writer::start_tag('div', array('class' => 'activity_overview'));
-            $url = new moodle_url("/mod/$module/index.php", array('id' => $cid));
-            $modulename = get_string('modulename', $module);
-            $icontext = html_writer::link($url, $this->output->pix_icon('icon', $modulename, 'mod_'.$module, array('class'=>'iconlarge')));
-            if (get_string_manager()->string_exists("activityoverview", $module)) {
-                $icontext .= get_string("activityoverview", $module);
-            } else {
-                $icontext .= get_string("activityoverview", 'block_course_overview', $modulename);
-            }
-
-            // Add collapsible region with overview text in it.
-            $output .= $this->collapsible_region($overview[$module], '', 'region_'.$cid.'_'.$module, $icontext, '', true);
-
-            $output .= html_writer::end_tag('div');
+            $mform = new activity_form();
+            $mform->append_activity($cid, $module, $overview[$module]);     
+            $output .= $mform->html();
         }
         $output .= html_writer::end_tag('div');
         return $output;
@@ -225,74 +216,6 @@ class block_course_overview_renderer extends plugin_renderer_base {
         }
 
         $output .= $this->output->box_end();
-        return $output;
-    }
-
-    /**
-     * Creates collapsable region
-     *
-     * @param string $contents existing contents
-     * @param string $classes class names added to the div that is output.
-     * @param string $id id added to the div that is output. Must not be blank.
-     * @param string $caption text displayed at the top. Clicking on this will cause the region to expand or contract.
-     * @param string $userpref the name of the user preference that stores the user's preferred default state.
-     *      (May be blank if you do not wish the state to be persisted.
-     * @param bool $default Initial collapsed state to use if the user_preference it not set.
-     * @return bool if true, return the HTML as a string, rather than printing it.
-     */
-    protected function collapsible_region($contents, $classes, $id, $caption, $userpref = '', $default = false) {
-            $output  = $this->collapsible_region_start($classes, $id, $caption, $userpref, $default);
-            $output .= $contents;
-            $output .= $this->collapsible_region_end();
-
-            return $output;
-        }
-
-    /**
-     * Print (or return) the start of a collapsible region, that has a caption that can
-     * be clicked to expand or collapse the region. If JavaScript is off, then the region
-     * will always be expanded.
-     *
-     * @param string $classes class names added to the div that is output.
-     * @param string $id id added to the div that is output. Must not be blank.
-     * @param string $caption text displayed at the top. Clicking on this will cause the region to expand or contract.
-     * @param string $userpref the name of the user preference that stores the user's preferred default state.
-     *      (May be blank if you do not wish the state to be persisted.
-     * @param bool $default Initial collapsed state to use if the user_preference it not set.
-     * @return bool if true, return the HTML as a string, rather than printing it.
-     */
-    protected function collapsible_region_start($classes, $id, $caption, $userpref = '', $default = false) {
-        // Work out the initial state.
-        if (!empty($userpref) and is_string($userpref)) {
-            user_preference_allow_ajax_update($userpref, PARAM_BOOL);
-            $collapsed = get_user_preferences($userpref, $default);
-        } else {
-            $collapsed = $default;
-            $userpref = false;
-        }
-
-        if ($collapsed) {
-            $classes .= ' collapsed';
-        }
-
-        $output = '';
-        $output .= '<div id="' . $id . '" class="collapsibleregion ' . $classes . '">';
-        $output .= '<div id="' . $id . '_sizer">';
-        $output .= '<div id="' . $id . '_caption" class="collapsibleregioncaption">';
-        $output .= $caption . ' ';
-        $output .= '</div><div id="' . $id . '_inner" class="collapsibleregioninner">';
-        $this->page->requires->js_init_call('M.block_course_overview.collapsible', array($id, $userpref, get_string('clicktohideshow')));
-
-        return $output;
-    }
-
-    /**
-     * Close a region started with print_collapsible_region_start.
-     *
-     * @return string return the HTML as a string, rather than printing it.
-     */
-    protected function collapsible_region_end() {
-        $output = '</div></div></div>';
         return $output;
     }
 
