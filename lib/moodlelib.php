@@ -1174,7 +1174,7 @@ function clean_param($param, $type) {
             $param = trim($param);
             // Convert uppercase to lowercase MDL-16919.
             $param = core_text::strtolower($param);
-            if (empty($CFG->extendedusernamechars) || $CFG->extendedusernamechars != true) {
+            if (empty($CFG->extendedusernamechars)) {
                 $param = str_replace(" " , "", $param);
                 // Regular expression, eliminate all chars EXCEPT:
                 // alphanum, dash (-), underscore (_), at sign (@) and period (.) characters.
