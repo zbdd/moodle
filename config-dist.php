@@ -143,7 +143,7 @@ $CFG->admin = 'admin';
 // following to false. It's not recommended and is only to bypass 
 // situations where external databases do no adhere to the naming convention
 // Moodle sets for Usernames.
-//      $CFG->extendedusernamechars = true;
+//      $CFG->extendedusernamechars = false;
 // 
 // Allow user passwords to be included in backup files. Very dangerous
 // setting as far as it publishes password hashes that can be unencrypted
