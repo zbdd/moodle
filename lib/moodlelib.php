@@ -1172,6 +1172,7 @@ function clean_param($param, $type) {
         case PARAM_USERNAME:
             $param = fix_utf8($param);
             $param = str_replace(" " , "", $param);
+            $param = trim($param);
             // Convert uppercase to lowercase MDL-16919.
             $param = core_text::strtolower($param);
             if (empty($CFG->extendedusernamechars)) {
