@@ -139,6 +139,12 @@ $CFG->admin = 'admin';
 // any existing key.
 //      $CFG->mnetkeylifetime = 28;
 //
+// To disable safe username filtering during logon, you can set the
+// following to false. It's not recommended and is only to bypass
+// situations where external databases do not adhere to the naming convention
+// Moodle sets for Usernames.
+//      $CFG->extendedusernamechars = true;
+//
 // Allow user passwords to be included in backup files. Very dangerous
 // setting as far as it publishes password hashes that can be unencrypted
 // if the backup file is publicy available. Use it only if you can guarantee
