@@ -72,13 +72,9 @@ if (!isset($USER->grade_last_report)) {
 }
 $USER->grade_last_report[$course->id] = 'singleview';
 
-<<<<<<< HEAD:grade/report/single_view/index.php
 grade_regrade_final_grades($courseid);
 
-$report = new grade_report_single_view(
-=======
 $report = new grade_report_singleview(
->>>>>>> dfe0e3e... MDL-18229 gradebook: Renaming of Single_view to Single view:grade/report/singleview/index.php
     $courseid, $gpr, $context,
     $itemtype, $itemid, $groupid
 );
@@ -143,12 +139,8 @@ if ($report->screen instanceof selectable_items
     }
 }
 
-<<<<<<< HEAD:grade/report/single_view/index.php
-print_grade_page_head($course->id, 'report', 'single_view', $reportname);
-=======
 print_grade_page_head($course->id, 'report', 'singleview', $reportname);
 
->>>>>>> dfe0e3e... MDL-18229 gradebook: Renaming of Single_view to Single view:grade/report/singleview/index.php
 if(!is_null($graderleftnav)) {
     echo $graderleftnav;
 }
