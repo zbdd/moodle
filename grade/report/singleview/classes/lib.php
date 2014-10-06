@@ -139,7 +139,7 @@ abstract class gradereport_singleview_screen {
     public abstract function html();
 
     public function supports_paging() {
-        return true;
+        return false;
     }
 
     public function pager() {
