@@ -10,6 +10,10 @@
   margin: 0 auto 15px auto;
 }
 
+#page-grade-report-singleview-index label.selectlabel {
+    display: inline;
+}
+
 #page-grade-report-singleview-index div.generalbox form div {
   text-align: center;
 }

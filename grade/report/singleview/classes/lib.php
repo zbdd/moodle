@@ -69,6 +69,10 @@ abstract class gradereport_singleview_screen {
         $this->init(empty($itemid));
     }
 
+    public function heading() {
+        return get_string('pluginname', 'gradereport_singleview');
+    }
+
     public function setup_structure() {
         $this->structure = new grade_structure();
         $this->structure->modinfo = get_fast_modinfo($this->course);
@@ -128,10 +132,6 @@ abstract class gradereport_singleview_screen {
     public function make_toggle_links($key) {
         return get_string($key, 'gradereport_singleview') . ' ' .
             $this->make_toggle($key);
-    }
-
-    public function heading() {
-        return get_string('pluginname', 'gradereport_singleview');
     }
 
     public abstract function init($self_item_is_empty = false);
@@ -377,11 +377,14 @@ abstract class gradereport_singleview_tablelike extends gradereport_singleview_s
         $button_html = implode(' ', $this->buttons());
 
         $buttons = html_writer::tag('div', $button_html, $button_attr);
+        $selectview = new gradereport_singleview_select($this->courseid, $this->itemid, $this->groupid);
 
-        return html_writer::tag('form',
+        $html = $selectview->html();
+        $html .= html_writer::tag('form',
             $buttons . html_writer::table($table) . $this->bulk_insert() . $buttons,
             array('method' => 'POST')
         );
+        return $html;
     }
 
     public function bulk_insert() {
