@@ -43,6 +43,7 @@ class gradereport_singleview_select extends gradereport_singleview_screen {
         $html = '';
 
         $types = gradereport_singleview::valid_screens();
+        $html .= html_writer::start_tag('div', array('class' => 'pull-right'));
 
         foreach ($types as $type) {
             $class = gradereport_singleview::classname($type);
@@ -66,10 +67,11 @@ class gradereport_singleview_select extends gradereport_singleview_screen {
             );
 
             $url = new moodle_url('/grade/report/singleview/index.php', $params);
-            $html .= $OUTPUT->heading($screen->description());
-
-            $html .= $OUTPUT->single_select($url, 'itemid', $options);
+            $select = new single_select($url, 'itemid', $options);
+            $select->set_label(get_string($type . 'select', 'gradereport_singleview'), array('class' => 'selectlabel'));
+            $html .= $OUTPUT->render($select);
         }
+        $html .= html_writer::end_tag('div');
 
         if (empty($html)) {
             $OUTPUT->notification(get_string('noscreens', 'gradereport_singleview'));

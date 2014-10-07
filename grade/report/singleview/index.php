@@ -41,6 +41,7 @@ $itemtype = optional_param('item', $defaulttype, PARAM_TEXT);
 $courseparams = array('id' => $courseid);
 
 $PAGE->set_url(new moodle_url('/grade/report/singleview/index.php', $courseparams));
+$PAGE->set_pagelayout('incourse');
 
 if (!$course = $DB->get_record('course', $courseparams)) {
     print_error('nocourseid');
