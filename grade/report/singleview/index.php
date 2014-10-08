@@ -62,10 +62,10 @@ require_capability('moodle/grade:edit', $context);
 // End permission.
 
 $gpr = new grade_plugin_return(array(
-    'type' => 'report',
-    'plugin' => 'singleview',
-    'courseid' => $courseid
-));
+            'type' => 'report',
+            'plugin' => 'singleview',
+            'courseid' => $courseid
+            ));
 
 // Last selected report session tracking.
 if (!isset($USER->grade_last_report)) {
@@ -76,9 +76,9 @@ $USER->grade_last_report[$course->id] = 'singleview';
 grade_regrade_final_grades($courseid);
 
 $report = new gradereport_singleview(
-    $courseid, $gpr, $context,
-    $itemtype, $itemid, $groupid
-);
+        $courseid, $gpr, $context,
+        $itemtype, $itemid, $groupid
+        );
 
 $reportname = $report->screen->heading();
 
@@ -106,74 +106,75 @@ if ($data = data_submitted()) {
     $warnings = $report->process_data($data);
 
     if (empty($warnings)) {
-        redirect($reporturl);
+        echo $OUTPUT->header();
+        echo $OUTPUT->notification(get_string('gradessaved', 'gradereport_singleview'), 'notifysuccess');
+        echo $OUTPUT->continue_button(new moodle_url($editurl));
+        echo $OUTPUT->footer();
     }
-}
+} else {
+    $graderrightnav = $graderleftnav = null;
+    if ($report->screen instanceof gradereport_selectable_items
+            && class_exists(gradereport_singleview::classname($report->screen->item_type()))) {
 
-$graderrightnav = $graderleftnav = null;
-if ($report->screen instanceof gradereport_selectable_items
-        && class_exists(gradereport_singleview::classname($report->screen->item_type()))) {
+        $optionkeys = array_keys($report->screen->options());
+        $optionitemid = array_shift($optionkeys);
 
-    $optionkeys = array_keys($report->screen->options());
-    $optionitemid = array_shift($optionkeys);
-
-    $relreport = new gradereport_singleview(
+        $relreport = new gradereport_singleview(
                 $courseid, $gpr, $context,
                 $report->screen->item_type(), $optionitemid, $groupid
-    );
-    $reloptions = $relreport->screen->options();
-    $reloptionssorting = array_keys($relreport->screen->options());
+                );
+        $reloptions = $relreport->screen->options();
+        $reloptionssorting = array_keys($relreport->screen->options());
 
-    $i = array_search($itemid, $reloptionssorting);
-    $navparams = array('item' => $itemtype, 'id' => $courseid, 'group' => $groupid);
-    if ($i > 0) {
-        $navparams['itemid'] = $reloptionssorting[$i - 1];
-        $link = new moodle_url('/grade/report/singleview/index.php', $navparams);
-        $navprev = html_writer::link($link, $reloptions[$reloptionssorting[$i - 1]]);
-        $graderleftnav = html_writer::tag('small', $navprev, array('class' => 'itemnav previtem'));
+        $i = array_search($itemid, $reloptionssorting);
+        $navparams = array('item' => $itemtype, 'id' => $courseid, 'group' => $groupid);
+        if ($i > 0) {
+            $navparams['itemid'] = $reloptionssorting[$i - 1];
+            $link = new moodle_url('/grade/report/singleview/index.php', $navparams);
+            $navprev = html_writer::link($link, $reloptions[$reloptionssorting[$i - 1]]);
+            $graderleftnav = html_writer::tag('small', $navprev, array('class' => 'itemnav previtem'));
+        }
+        if ($i < count($reloptionssorting) - 1) {
+            $navparams['itemid'] = $reloptionssorting[$i + 1];
+            $link = new moodle_url('/grade/report/singleview/index.php', $navparams);
+            $navnext = html_writer::link($link, $reloptions[$reloptionssorting[$i + 1]]);
+            $graderrightnav = html_writer::tag('small', $navnext, array('class' => 'itemnav nextitem'));
+        }
     }
-    if ($i < count($reloptionssorting) - 1) {
-        $navparams['itemid'] = $reloptionssorting[$i + 1];
-        $link = new moodle_url('/grade/report/singleview/index.php', $navparams);
-        $navnext = html_writer::link($link, $reloptions[$reloptionssorting[$i + 1]]);
-        $graderrightnav = html_writer::tag('small', $navnext, array('class' => 'itemnav nextitem'));
+
+    print_grade_page_head($course->id, 'report', 'singleview', $reportname);
+    if (!is_null($graderleftnav)) {
+        echo $graderleftnav;
     }
-}
-
-print_grade_page_head($course->id, 'report', 'singleview', $reportname);
-
-if (!is_null($graderleftnav)) {
-    echo $graderleftnav;
-}
-if (!is_null($graderrightnav)) {
-    echo $graderrightnav;
-}
-
-if ($report->screen->supports_paging()) {
-    echo $report->screen->pager();
-}
-
-if ($report->screen->display_group_selector()) {
-    echo $report->group_selector;
-}
-
-if (!empty($warnings)) {
-    foreach ($warnings as $warning) {
-        echo $OUTPUT->notification($warning);
+    if (!is_null($graderrightnav)) {
+        echo $graderrightnav;
     }
-}
 
-echo $report->output();
+    if ($report->screen->supports_paging()) {
+        echo $report->screen->pager();
+    }
 
-if ($report->screen->supports_paging()) {
-    echo $report->screen->pager();
-}
+    if ($report->screen->display_group_selector()) {
+        echo $report->group_selector;
+    }
 
-if(!is_null($graderleftnav)) {
-    echo $graderleftnav;
-}
-if(!is_null($graderrightnav)) {
-    echo $graderrightnav;
-}
+    if (!empty($warnings)) {
+        foreach ($warnings as $warning) {
+            echo $OUTPUT->notification($warning);
+        }
+    }
 
-echo $OUTPUT->footer();
+    echo $report->output();
+
+    if ($report->screen->supports_paging()) {
+        echo $report->screen->pager();
+    }
+
+    if(!is_null($graderleftnav)) {
+        echo $graderleftnav;
+    }
+    if(!is_null($graderrightnav)) {
+        echo $graderrightnav;
+    }
+    echo $OUTPUT->footer();
+}

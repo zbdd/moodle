@@ -37,6 +37,7 @@ $string['excludenone'] = 'Exclude no grades';
 $string['feedbackfor'] = 'Feedback for {$a}';
 $string['filtergrades'] = 'Show grades for {$a}.';
 $string['gradefor'] = 'Grade for {$a}';
+$string['gradessaved'] = 'Changes successfully saved';
 $string['gradeselect'] = 'Select user';
 $string['noscreens'] = 'Could not find a suitable Single view screen.';
 $string['notallowed'] = 'Not allowed to use Singleview on this item.';
