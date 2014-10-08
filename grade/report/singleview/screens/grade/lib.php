@@ -204,6 +204,6 @@ class gradereport_singleview_grade extends gradereport_singleview_tablelike
     }
 
     public function heading() {
-        return $this->item->get_name();
+        return get_string('gradeheader', 'gradereport_singleview', $this->item->get_name());
     }
 }

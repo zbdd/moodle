@@ -37,6 +37,10 @@ class gradereport_singleview_select extends gradereport_singleview_screen {
         $this->item = $DB->get_record('course', array('id' => $this->courseid));
     }
 
+    public function heading() {
+        return get_string('selectheader', 'gradereport_singleview');
+    }
+
     public function html() {
         global $OUTPUT;
 

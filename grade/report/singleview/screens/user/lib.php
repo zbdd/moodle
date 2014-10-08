@@ -157,6 +157,6 @@ class gradereport_singleview_user extends gradereport_singleview_tablelike imple
     }
 
     public function heading() {
-        return fullname($this->item);
+        return get_string('userheader', 'gradereport_singleview', fullname($this->item));
     }
 }
