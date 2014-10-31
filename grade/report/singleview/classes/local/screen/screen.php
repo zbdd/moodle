@@ -255,7 +255,16 @@ abstract class screen {
 
         $fields = $this->definition();
 
+        $progress = 0;
+        $progressbar = new \core\progress\display_if_slow();
+        $progressbar->start_html();
+        $progressbar->start_progress('Updating records', count((array) $data) + 100);
+        $changecount = 0;
+
         foreach ($data as $varname => $throw) {
+            $progressbar->progress($progress);
+            $progress++;
+
             if (preg_match("/(\w+)_(\d+)_(\d+)/", $varname, $matches)) {
                 $itemid = $matches[2];
                 $userid = $matches[3];
@@ -309,6 +318,7 @@ abstract class screen {
             if (!empty($msg)) {
                 $warnings[] = $msg;
             }
+            $changecount++;
         }
 
         // Some post-processing.
@@ -316,8 +326,11 @@ abstract class screen {
         $eventdata->warnings = $warnings;
         $eventdata->post_data = $data;
         $eventdata->instance = $this;
+        $eventdata->changecount = $changecount;
 
-        return $eventdata->warnings;
+        $progressbar->end_html();
+
+        return $eventdata;
     }
 
     /**
