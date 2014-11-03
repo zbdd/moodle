@@ -258,13 +258,11 @@ abstract class screen {
         $progress = 0;
         $progressbar = new \core\progress\display_if_slow();
         $progressbar->start_html();
-        $progressbar->start_progress('Updating records', count((array) $data) + 100);
-        $changecount = 0;
+        $progressbar->start_progress('Updating records', count((array) $data) - 1);
+        $changecount = array();
 
         foreach ($data as $varname => $throw) {
-            $progressbar->progress($progress);
             $progress++;
-
             if (preg_match("/(\w+)_(\d+)_(\d+)/", $varname, $matches)) {
                 $itemid = $matches[2];
                 $userid = $matches[3];
@@ -279,6 +277,7 @@ abstract class screen {
             if (preg_match('/^old[oe]{1}/', $varname)) {
                 $elementname = preg_replace('/^old/', '', $varname);
                 if (!isset($data->$elementname)) {
+                    $progress--;
                     $data->$elementname = false;
                 }
             }
@@ -290,7 +289,6 @@ abstract class screen {
             if (!$gradeitem) {
                 continue;
             }
-
             $grade = $this->fetch_grade_or_default($gradeitem, $userid);
 
             $classname = '\\gradereport_singleview\\local\\ui\\' . $matches[1];
@@ -318,7 +316,9 @@ abstract class screen {
             if (!empty($msg)) {
                 $warnings[] = $msg;
             }
-            $changecount++;
+            if (preg_match('/_(\d+)_(\d+)/', $varname, $matchelement)) {
+                $changecount[$matchelement[0]] = 1;
+            }
         }
 
         // Some post-processing.

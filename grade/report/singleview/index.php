@@ -110,9 +110,7 @@ if ($data = data_submitted()) {
             echo $OUTPUT->notification($warning);
         }
     }
-    if ($result->changecount) {
-        echo $OUTPUT->notification(get_string('savegradessuccess', 'gradereport_singleview', $result->changecount));
-    }
+    echo $OUTPUT->notification(get_string('savegradessuccess', 'gradereport_singleview', count ((array)$result->changecount)));
     echo $OUTPUT->continue_button($currentpage);
     echo $OUTPUT->footer();
     die();
