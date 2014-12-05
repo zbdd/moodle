@@ -176,17 +176,19 @@ class assign_feedback_comments extends assign_feedback_plugin {
     public function save_quickgrading_changes($userid, $grade) {
         global $DB;
         $feedbackcomment = $this->get_feedback_comments($grade->id);
-        $feedbackpresent = optional_param('quickgrade_comments_' . $userid, false, PARAM_TEXT) !== false;
+        $feedbackpresent = optional_param('quickgrade_comments_' . $userid, false, PARAM_RAW) !== false;
         if (!$feedbackpresent) {
             // Nothing to save (e.g. hidden column).
             return true;
         }
         if ($feedbackcomment) {
-            $feedbackcomment->commenttext = optional_param('quickgrade_comments_' . $userid, '', PARAM_TEXT);
+            $feedbackcomment->commenttext = optional_param('quickgrade_comments_' . $userid, '', PARAM_RAW);
+            $feedbackcomment->commenttext = s($feedbackcomment->commenttext);
             return $DB->update_record('assignfeedback_comments', $feedbackcomment);
         } else {
             $feedbackcomment = new stdClass();
-            $feedbackcomment->commenttext = optional_param('quickgrade_comments_' . $userid, '', PARAM_TEXT);
+            $feedbackcomment->commenttext = optional_param('quickgrade_comments_' . $userid, '', PARAM_RAW);
+            $feedbackcomment->commenttext = s($feedbackcomment->commenttext);
             $feedbackcomment->commentformat = FORMAT_HTML;
             $feedbackcomment->grade = $grade->id;
             $feedbackcomment->assignment = $this->assignment->get_instance()->id;
