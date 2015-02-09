@@ -236,6 +236,9 @@ function choice_prepare_options($choice, $user, $coursemodule, $allresponses) {
 }
 
 /**
+ * Take form submitted answers and either update existing
+ * or add any new answers.
+ *
  * @global object
  * @param int $formanswer
  * @param object $choice
@@ -260,146 +263,151 @@ function choice_user_submit_response($formanswer, $choice, $userid, $course, $cm
         $formanswers = array($formanswer);
     }
 
-    $current = $DB->get_records('choice_answers', array('choiceid' => $choice->id, 'userid' => $userid));
-    $context = context_module::instance($cm->id);
+    $allowrecordupdate = true;
+    try {
+        // Start transaction to prevent synchronous access of choice answers
+        // before this function has had time to process the form results.
+        $transaction = $DB->start_delegated_transaction();
 
-    $choicesexceeded = false;
-    $countanswers = array();
-    foreach ($formanswers as $val) {
-        $countanswers[$val] = 0;
-    }
-    if($choice->limitanswers) {
-        // Find out whether groups are being used and enabled
-        if (groups_get_activity_groupmode($cm) > 0) {
-            $currentgroup = groups_get_activity_group($cm);
-        } else {
-            $currentgroup = 0;
+        $current = $DB->get_records('choice_answers', array('choiceid' => $choice->id, 'userid' => $userid));
+        $context = context_module::instance($cm->id);
+        $choicesexceeded = false;
+        $countanswers = array();
+
+        foreach ($formanswers as $val) {
+            $countanswers[$val] = 0;
         }
+        if ($choice->limitanswers) {
+            // Find out whether groups are being used and enabled.
+            if (groups_get_activity_groupmode($cm) > 0) {
+                $currentgroup = groups_get_activity_group($cm);
+            } else {
+                $currentgroup = 0;
+            }
 
-        list ($insql, $params) = $DB->get_in_or_equal($formanswers, SQL_PARAMS_NAMED);
+            list ($insql, $params) = $DB->get_in_or_equal($formanswers, SQL_PARAMS_NAMED);
 
-        if($currentgroup) {
-            // If groups are being used, retrieve responses only for users in
-            // current group
-            global $CFG;
+            if ($currentgroup) {
+                // If groups are being used, retrieve responses only for users in
+                // current group.
+                global $CFG;
 
-            $params['groupid'] = $currentgroup;
-            $sql = "SELECT ca.*
-                      FROM {choice_answers} ca
-                INNER JOIN {groups_members} gm ON ca.userid=gm.userid
-                     WHERE optionid $insql
-                       AND gm.groupid= :groupid";
-        } else {
-            // Groups are not used, retrieve all answers for this option ID
-            $sql = "SELECT ca.*
-                      FROM {choice_answers} ca
-                     WHERE optionid $insql";
-        }
+                $params['groupid'] = $currentgroup;
+                $sql = "SELECT ca.*
+                          FROM {choice_answers} ca
+                    INNER JOIN {groups_members} gm ON ca.userid=gm.userid
+                         WHERE optionid $insql
+                           AND gm.groupid= :groupid";
+            } else {
+                // Groups are not used, retrieve all answers for this option ID.
+                $sql = "SELECT ca.*
+                          FROM {choice_answers} ca
+                         WHERE optionid $insql";
+            }
 
-        $answers = $DB->get_records_sql($sql, $params);
-        if ($answers) {
-            foreach ($answers as $a) { //only return enrolled users.
-                if (is_enrolled($context, $a->userid, 'mod/choice:choose')) {
-                    $countanswers[$a->optionid]++;
+            $answers = $DB->get_records_sql($sql, $params);
+            if ($answers) {
+                foreach ($answers as $a) { // Only return enrolled users.
+                    if (is_enrolled($context, $a->userid, 'mod/choice:choose')) {
+                        $countanswers[$a->optionid]++;
+                    }
+                }
+            }
+            foreach ($countanswers as $opt => $count) {
+                if ($count >= $choice->maxanswers[$opt]) {
+                    $choicesexceeded = true;
+                    break;
                 }
             }
         }
-        foreach ($countanswers as $opt => $count) {
-            if ($count > $choice->maxanswers[$opt]) {
-                $choicesexceeded = true;
-                break;
-            }
-        }
-    }
 
-    // Check the user hasn't exceeded the maximum selections for the choice(s) they have selected.
-    if (!($choice->limitanswers && $choicesexceeded)) {
-        $answersnapshots = array();
-        if ($current) {
+        // Not using choices limits or answer limit has not been exceeded.
+        if (!($choice->limitanswers && $choicesexceeded)) {
+            $answersnapshots = array();
 
-            $existingchoices = array();
-            foreach ($current as $c) {
-                if (in_array($c->optionid, $formanswers)) {
-                    $existingchoices[] = $c->optionid;
-                    $DB->set_field('choice_answers', 'timemodified', time(), array('id' => $c->id));
-                    $answersnapshots[] = $c;
-                } else {
-                    $DB->delete_records('choice_answers', array('id' => $c->id));
+            // If there are existing choice answers.
+            if ($current) {
+
+                // If existing answers are also in the form, update them.
+                $existingchoices = array();
+                foreach ($current as $c) {
+                    if (in_array($c->optionid, $formanswers)) {
+                        $existingchoices[] = $c->optionid;
+                        $DB->set_field('choice_answers', 'timemodified', time(), array('id' => $c->id));
+                        $answersnapshots[] = $c;
+                    } else {
+                        $DB->delete_records('choice_answers', array('id' => $c->id));
+                    }
                 }
-            }
 
-            // Add new ones.
-            foreach ($formanswers as $f) {
-                if (!in_array($f, $existingchoices)) {
+                // Add new answers from the submitted form.
+                foreach ($formanswers as $f) {
+                    if (!in_array($f, $existingchoices)) {
+                        $newanswer = new stdClass();
+                        $newanswer->optionid = $f;
+                        $newanswer->choiceid = $choice->id;
+                        $newanswer->userid = $userid;
+                        $newanswer->timemodified = time();
+                        $newanswer->id = $DB->insert_record("choice_answers", $newanswer);
+                        $answersnapshots[] = $newanswer;
+                    }
+                }
+            } else {
+                // No existing answers so add the new ones.
+                foreach ($formanswers as $answer) {
                     $newanswer = new stdClass();
-                    $newanswer->optionid = $f;
                     $newanswer->choiceid = $choice->id;
                     $newanswer->userid = $userid;
+                    $newanswer->optionid = $answer;
                     $newanswer->timemodified = time();
                     $newanswer->id = $DB->insert_record("choice_answers", $newanswer);
                     $answersnapshots[] = $newanswer;
                 }
-            }
 
-            $eventdata = array();
-            $eventdata['context'] = $context;
-            $eventdata['objectid'] = $choice->id;
-            $eventdata['userid'] = $userid;
-            $eventdata['courseid'] = $course->id;
-            $eventdata['other'] = array();
-            $eventdata['other']['choiceid'] = $choice->id;
-            $eventdata['other']['optionid'] = $formanswer;
-
-            $event = \mod_choice\event\answer_updated::create($eventdata);
-            $event->add_record_snapshot('course', $course);
-            $event->add_record_snapshot('course_modules', $cm);
-            $event->add_record_snapshot('choice', $choice);
-            foreach ($answersnapshots as $record) {
-                $event->add_record_snapshot('choice_answers', $record);
+                // Update completion state.
+                $completion = new completion_info($course);
+                if ($completion->is_enabled($cm) && $choice->completionsubmit) {
+                    $completion->update_state($cm, COMPLETION_COMPLETE);
+                }
             }
-            $event->trigger();
         } else {
-
-            foreach ($formanswers as $answer) {
-                $newanswer = new stdClass();
-                $newanswer->choiceid = $choice->id;
-                $newanswer->userid = $userid;
-                $newanswer->optionid = $answer;
-                $newanswer->timemodified = time();
-                $newanswer->id = $DB->insert_record("choice_answers", $newanswer);
-                $answersnapshots[] = $newanswer;
+            // Choice limits in use and answers exceed the limit.
+            $currentids = array_keys($current);
+            if (array_diff($currentids, $formanswers) || array_diff($formanswers, $currentids) ) {
+                $allowrecordupdate = false;
+                print_error('choicefull', 'choice');
             }
-
-            // Update completion state
-            $completion = new completion_info($course);
-            if ($completion->is_enabled($cm) && $choice->completionsubmit) {
-                $completion->update_state($cm, COMPLETION_COMPLETE);
-            }
-
-            $eventdata = array();
-            $eventdata['context'] = $context;
-            $eventdata['objectid'] = $choice->id;
-            $eventdata['userid'] = $userid;
-            $eventdata['courseid'] = $course->id;
-            $eventdata['other'] = array();
-            $eventdata['other']['choiceid'] = $choice->id;
-            $eventdata['other']['optionid'] = $formanswers;
-
-            $event = \mod_choice\event\answer_submitted::create($eventdata);
-            $event->add_record_snapshot('course', $course);
-            $event->add_record_snapshot('course_modules', $cm);
-            $event->add_record_snapshot('choice', $choice);
-            foreach ($answersnapshots as $record) {
-                $event->add_record_snapshot('choice_answers', $record);
-            }
-            $event->trigger();
         }
-    } else {
-        // Check to see if current choice already selected - if not display error.
-        $currentids = array_keys($current);
-        if (array_diff($currentids, $formanswers) || array_diff($formanswers, $currentids) ) {
-            print_error('choicefull', 'choice');
+        // End transaction and commit changes if there wasn't errors.
+        if ($allowrecordupdate) {
+            $transaction->allow_commit();
         }
+    } catch (Exception $e) {
+        // Catch any DB errors and ensure no records are updated.
+        $allowrecordupdate = false;
+        $transaction->rollback($e);
+    }
+
+    // If there were no errors record the events that took place.
+    if ($allowrecordupdate) {
+        $eventdata = array();
+        $eventdata['context'] = $context;
+        $eventdata['objectid'] = $choice->id;
+        $eventdata['userid'] = $userid;
+        $eventdata['courseid'] = $course->id;
+        $eventdata['other'] = array();
+        $eventdata['other']['choiceid'] = $choice->id;
+        $eventdata['other']['optionid'] = $formanswers;
+
+        $event = \mod_choice\event\answer_submitted::create($eventdata);
+        $event->add_record_snapshot('course', $course);
+        $event->add_record_snapshot('course_modules', $cm);
+        $event->add_record_snapshot('choice', $choice);
+
+        foreach ($answersnapshots as $record) {
+            $event->add_record_snapshot('choice_answers', $record);
+        }
+        $event->trigger();
     }
 }
 
