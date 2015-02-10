@@ -56,6 +56,8 @@ $completion->set_module_viewed($cm);
 /// Submit any new data if there is any
 if (data_submitted() && is_enrolled($context, NULL, 'mod/choice:choose') && confirm_sesskey()) {
     $timenow = time();
+    $error = '';
+
     if (has_capability('mod/choice:deleteresponses', $context) && $action == 'delete') {
         //some responses need to be deleted
         choice_delete_responses($attemptids, $choice, $cm, $course); //delete responses.
@@ -71,11 +73,16 @@ if (data_submitted() && is_enrolled($context, NULL, 'mod/choice:choose') && conf
     if (empty($answer)) {
         redirect("view.php?id=$cm->id", get_string('mustchooseone', 'choice'));
     } else {
-        choice_user_submit_response($answer, $choice, $USER->id, $course, $cm);
+        $error = choice_user_submit_response($answer, $choice, $USER->id, $course, $cm);
     }
+
     echo $OUTPUT->header();
     echo $OUTPUT->heading(format_string($choice->name), 2, null);
-    echo $OUTPUT->notification(get_string('choicesaved', 'choice'),'notifysuccess');
+    if (empty($error)) {
+        echo $OUTPUT->notification(get_string('choicesaved', 'choice'), 'notifysuccess');
+    } else {
+        echo $OUTPUT->notification($error);
+    }
 } else {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(format_string($choice->name), 2, null);

@@ -245,18 +245,21 @@ function choice_prepare_options($choice, $user, $coursemodule, $allresponses) {
  * @param int $userid
  * @param object $course Course object
  * @param object $cm
+ * @return string $error
  */
 function choice_user_submit_response($formanswer, $choice, $userid, $course, $cm) {
     global $DB, $CFG;
     require_once($CFG->libdir.'/completionlib.php');
 
+    $error = '';
+
     if (empty($formanswer)) {
-        print_error('atleastoneoption', 'choice');
+        return get_string('atleastoneoption', 'choice');
     }
 
     if (is_array($formanswer)) {
         if (!$choice->allowmultiple) {
-            print_error('multiplenotallowederror', 'choice');
+            return get_string('multiplenotallowederror', 'choice');
         }
         $formanswers = $formanswer;
     } else {
@@ -374,22 +377,21 @@ function choice_user_submit_response($formanswer, $choice, $userid, $course, $cm
             // Choice limits in use and answers exceed the limit.
             $currentids = array_keys($current);
             if (array_diff($currentids, $formanswers) || array_diff($formanswers, $currentids) ) {
-                $allowrecordupdate = false;
-                print_error('choicefull', 'choice');
+                $error = get_string('choicefull', 'choice');
             }
         }
         // End transaction and commit changes if there wasn't errors.
-        if ($allowrecordupdate) {
+        if (empty($error)) {
             $transaction->allow_commit();
         }
     } catch (Exception $e) {
         // Catch any DB errors and ensure no records are updated.
-        $allowrecordupdate = false;
         $transaction->rollback($e);
+        return $error;
     }
 
     // If there were no errors record the events that took place.
-    if ($allowrecordupdate) {
+    if (empty($error)) {
         $eventdata = array();
         $eventdata['context'] = $context;
         $eventdata['objectid'] = $choice->id;
@@ -409,6 +411,7 @@ function choice_user_submit_response($formanswer, $choice, $userid, $course, $cm
         }
         $event->trigger();
     }
+    return $error;
 }
 
 /**
