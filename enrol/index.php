@@ -58,11 +58,17 @@ if (\core\session\manager::is_loggedinas() and $USER->loginascontext->contextlev
 $enrols = enrol_get_plugins(true);
 $enrolinstances = enrol_get_instances($course->id, true);
 $forms = array();
+$errors = array();
 foreach($enrolinstances as $instance) {
     if (!isset($enrols[$instance->enrol])) {
         continue;
     }
     $form = $enrols[$instance->enrol]->enrol_page_hook($instance);
+
+    if (!empty($enrols[$instance->enrol]->error)) {
+        $errors[$instance->id] = $enrols[$instance->enrol]->error;
+    }
+
     if ($form) {
         $forms[$instance->id] = $form;
     }
@@ -96,10 +102,20 @@ foreach ($forms as $form) {
 }
 
 if (!$forms) {
+    // Default error message.
+    if (empty($errors)) {
+        $errors[] = get_string('notenrollable', 'enrol');
+    }
+
+    foreach ($errors as $errorid => $errormsg) {
+        $errors[$errorid] = $OUTPUT->box($errormsg);
+    }
+
     if (isguestuser()) {
         notice(get_string('noguestaccess', 'enrol'), get_login_url());
     } else {
-        notice(get_string('notenrollable', 'enrol'), "$CFG->wwwroot/index.php");
+        // Display all errors.
+        notice(implode('', $errors), "$CFG->wwwroot/index.php");
     }
 }
 
