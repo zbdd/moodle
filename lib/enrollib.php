@@ -1072,6 +1072,9 @@ function enrol_accessing_via_instance(stdClass $instance) {
 abstract class enrol_plugin {
     protected $config = null;
 
+    /** @var string $error Any error message from an enrolment plugin. */
+    public $error = '';
+
     /**
      * Returns name of this enrol plugin
      * @return string
