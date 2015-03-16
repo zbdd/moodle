@@ -248,9 +248,10 @@ class enrol_self_plugin extends enrol_plugin {
             $form->display();
             $output = ob_get_clean();
             return $OUTPUT->box($output);
-        } else {
-            return $OUTPUT->box($enrolstatus);
         }
+
+        // Record the error.
+        $this->error = $enrolstatus;
     }
 
     /**
