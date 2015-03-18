@@ -7763,3 +7763,37 @@ function forum_get_context($forumid, $context = null) {
 
     return $context;
 }
+
+/**
+ * Add nodes to myprofile page.
+ *
+ * @param \core_user\output\myprofile\tree $tree Tree object
+ * @param stdClass $user user object
+ * @param bool $iscurrentuser
+ * @param stdClass $course Course object
+ *
+ * @return bool
+ */
+function mod_forum_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
+    if (isguestuser($user)) {
+        // The guest user cannot post, so it is not possible to view any posts.
+        // May as well just bail aggressively here.
+        return false;
+    }
+    $postsurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id));
+    if (!empty($course)) {
+        $postsurl->param('coursre', $course->id);
+    }
+    $node = new core_user\output\myprofile\node('miscellaneous', 'forumposts', get_string('posts', 'mod_forum'), null, $postsurl);
+    $tree->add_node($node);
+
+    $discussionssurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id, 'mode' => 'discussions'));
+    if (!empty($course)) {
+        $postsurl->param('coursre', $course->id);
+    }
+    $node = new core_user\output\myprofile\node('miscellaneous', 'forumdiscussions', get_string('discussions', 'mod_forum'), null,
+        $discussionssurl);
+    $tree->add_node($node);
+
+    return true;
+}
