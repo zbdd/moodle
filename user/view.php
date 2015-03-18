@@ -385,20 +385,16 @@ if (has_capability('moodle/user:viewlastip', $usercontext) && !isset($hiddenfiel
 echo html_writer::end_tag('dl');
 echo "</div></div>"; // Closing desriptionbox and userprofilebox.
 
-if (empty($CFG->forceloginforprofiles) || $currentuser || has_capability('moodle/user:viewdetails', $usercontext)
-        || has_coursecontact_role($id)) {
-    echo '<div class="fullprofilelink">';
-    echo html_writer::link($CFG->wwwroot.'/user/profile.php?id='.$id, get_string('fullprofile'));
-    echo '</div>';
-}
-
 // TODO Add more useful overview info for teachers here, see below.
 // Show links to notes made about this student (must click to display, for privacy).
 // Recent comments made in this course.
 // Recent blogs associated with this course and items in it.
 
-
-
 echo '</div>';  // Userprofile class.
+
+// Render custom blocks.
+$renderer = $PAGE->get_renderer('core_user', 'myprofile');
+$tree = core_user\output\myprofile\manager::build_tree($user, $currentuser, $course);
+echo $renderer->render($tree);
 
 echo $OUTPUT->footer();

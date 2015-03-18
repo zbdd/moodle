@@ -450,4 +450,10 @@ echo "</div></div>"; // Closing desriptionbox and userprofilebox.
 echo $OUTPUT->custom_block_region('content');
 
 echo '</div>';  // Userprofile class.
+
+// Render custom blocks.
+$renderer = $PAGE->get_renderer('core_user', 'myprofile');
+$tree = core_user\output\myprofile\manager::build_tree($user, $currentuser);
+echo $renderer->render($tree);
+
 echo $OUTPUT->footer();
