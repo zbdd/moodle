@@ -7784,14 +7784,18 @@ function mod_forum_myprofile_navigation(core_user\output\myprofile\tree $tree, $
     if (!empty($course)) {
         $postsurl->param('coursre', $course->id);
     }
-    $node = new core_user\output\myprofile\node('miscellaneous', 'forumposts', get_string('posts', 'mod_forum'), null, $postsurl);
+    $string = $iscurrentuser ? get_string('myprofileownpost', 'mod_forum') :
+            get_string('myprofileotherpost', 'mod_forum', fullname($user));
+    $node = new core_user\output\myprofile\node('miscellaneous', 'forumposts', $string, null, $postsurl);
     $tree->add_node($node);
 
     $discussionssurl = new moodle_url('/mod/forum/user.php', array('id' => $user->id, 'mode' => 'discussions'));
     if (!empty($course)) {
         $postsurl->param('coursre', $course->id);
     }
-    $node = new core_user\output\myprofile\node('miscellaneous', 'forumdiscussions', get_string('discussions', 'mod_forum'), null,
+    $string = $iscurrentuser ? get_string('myprofileowndis', 'mod_forum') :
+            get_string('myprofileotherdis', 'mod_forum', fullname($user));
+    $node = new core_user\output\myprofile\node('miscellaneous', 'forumdiscussions', $string, null,
         $discussionssurl);
     $tree->add_node($node);
 

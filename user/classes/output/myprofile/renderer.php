@@ -57,13 +57,17 @@ class renderer extends \plugin_renderer_base {
      * @return string
      */
     public function render_category(category $category) {
-        $return = \html_writer::start_div();
+        $return = \html_writer::start_tag('ul');
         $return .= \html_writer::tag('h2', $category->title);
         $nodes = $category->nodes;
+        if (empty($nodes)) {
+            // No nodes, nothing to render.
+            return '';
+        }
         foreach ($nodes as $node) {
             $return .= $this->render($node);
         }
-        $return .= \html_writer::end_div();
+        $return .= \html_writer::end_tag('ul');
         return $return;
     }
 
@@ -75,7 +79,7 @@ class renderer extends \plugin_renderer_base {
      * @return string
      */
     public function render_node(node $node) {
-        $return = \html_writer::start_div();
+        $return = \html_writer::start_tag('li');
         if (is_object($node->url)) {
             $header = \html_writer::link($node->url, $node->title);
         } else {
@@ -94,7 +98,7 @@ class renderer extends \plugin_renderer_base {
             $return .= \html_writer::span($header);
         }
 
-        $return .= \html_writer::end_div();
+        $return .= \html_writer::end_tag('li');
         return $return;
     }
 }

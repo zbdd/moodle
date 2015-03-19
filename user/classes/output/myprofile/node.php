@@ -90,7 +90,7 @@ class node implements \renderable {
         $this->after = $after;
         $this->name = $name;
         $this->title = $title;
-        $this->url = new \moodle_url($url);
+        $this->url = is_null($url) ? null : new \moodle_url($url);
         $this->content = $content;
         $this->icon = $icon;
     }

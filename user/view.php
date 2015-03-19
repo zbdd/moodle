@@ -263,30 +263,6 @@ echo '</div>';
 // Print all the little details in a list.
 
 echo html_writer::start_tag('dl', array('class' => 'list'));
-// Show email if any of the following conditions match.
-// 1. User is viewing his own profile.
-// 2. Has allowed everyone to see email
-// 3. User has allowed course members to can see email and current user is in same course
-// 4. Has either course:viewhiddenuserfields or site:viewuseridentity capability.
-if ($currentuser
-   or $user->maildisplay == 1
-   or ($user->maildisplay == 2 && is_enrolled($coursecontext, $USER))
-   or has_capability('moodle/course:viewhiddenuserfields', $coursecontext)
-   or has_capability('moodle/site:viewuseridentity', $coursecontext)) {
-    echo html_writer::tag('dt', get_string('email'));
-    echo html_writer::tag('dd', obfuscate_mailto($user->email, ''));
-}
-
-// Show last time this user accessed this course.
-if (!isset($hiddenfields['lastaccess'])) {
-    if ($lastaccess = $DB->get_record('user_lastaccess', array('userid' => $user->id, 'courseid' => $course->id))) {
-        $datestring = userdate($lastaccess->timeaccess)."&nbsp; (".format_time(time() - $lastaccess->timeaccess).")";
-    } else {
-        $datestring = get_string("never");
-    }
-    echo html_writer::tag('dt', get_string('lastcourseaccess'));
-    echo html_writer::tag('dd', $datestring);
-}
 
 // Show roles in this course.
 if ($rolestring = get_user_roles_in_course($id, $course->id)) {
@@ -372,16 +348,6 @@ if (!isset($hiddenfields['suspended'])) {
     }
 }
 
-if (has_capability('moodle/user:viewlastip', $usercontext) && !isset($hiddenfields['lastip'])) {
-    if ($user->lastip) {
-        $iplookupurl = new moodle_url('/iplookup/index.php', array('ip' => $user->lastip, 'user' => $USER->id));
-        $ipstring = html_writer::link($iplookupurl, $user->lastip);
-    } else {
-        $ipstring = get_string("none");
-    }
-    echo html_writer::tag('dt', get_string('lastip'));
-    echo html_writer::tag('dd', $ipstring);
-}
 echo html_writer::end_tag('dl');
 echo "</div></div>"; // Closing desriptionbox and userprofilebox.
 
