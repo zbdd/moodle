@@ -57,17 +57,19 @@ class renderer extends \plugin_renderer_base {
      * @return string
      */
     public function render_category(category $category) {
-        $return = \html_writer::start_tag('ul');
-        $return .= \html_writer::tag('h2', $category->title);
+        $return = \html_writer::start_tag('div', array('class' => 'span2'));
+        $return .= \html_writer::tag('h3', $category->title);
         $nodes = $category->nodes;
         if (empty($nodes)) {
             // No nodes, nothing to render.
             return '';
         }
+        $return .= \html_writer::start_tag('ul');
         foreach ($nodes as $node) {
             $return .= $this->render($node);
         }
         $return .= \html_writer::end_tag('ul');
+        $return .= \html_writer::end_tag('div');
         return $return;
     }
 
@@ -79,7 +81,7 @@ class renderer extends \plugin_renderer_base {
      * @return string
      */
     public function render_node(node $node) {
-        $return = \html_writer::start_tag('li');
+        $return = '';
         if (is_object($node->url)) {
             $header = \html_writer::link($node->url, $node->title);
         } else {
@@ -92,13 +94,16 @@ class renderer extends \plugin_renderer_base {
         $content = $node->content;
         if (!empty($content)) {
             // There is some content to display below this make this a header.
-            $return .= \html_writer::tag('h4', $header);
-            $return .= \html_writer::span($content);
+            $return .= \html_writer::start_tag('dl');
+            $return .= \html_writer::tag('dt', $header);
+            $return .= \html_writer::tag('dd', $content);
+            $return .= \html_writer::end_tag('dl');
         } else {
+            $return = \html_writer::start_tag('li');
             $return .= \html_writer::span($header);
+            $return .= \html_writer::end_tag('li');
         }
 
-        $return .= \html_writer::end_tag('li');
         return $return;
     }
 }
