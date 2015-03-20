@@ -17,6 +17,22 @@
     float: left;
     clear: none;
 }
+#page-user-profile .node_category {
+    li {
+        list-style-type: square;
+
+        &.contentnode {
+            list-style-type: none;
+        }
+    }
+}
+#page-user-profile.dir-ltr .node_category .contentnode {
+    margin-left: -25px;
+}
+#page-user-profile.dir-rtl .node_category .contentnode {
+    margin-right: -25px;
+}
+
 .dir-rtl {
     .userprofile .description {
         margin-right:0;
