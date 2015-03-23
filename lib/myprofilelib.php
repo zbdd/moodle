@@ -46,14 +46,14 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     $miscategory = new core_user\output\myprofile\category('miscellaneous', get_string('miscellaneous'));
     $reportcategory = new core_user\output\myprofile\category('reports', get_string('reports'), 'miscellaneous');
     $admincategory = new core_user\output\myprofile\category('administration', get_string('administration'), 'miscellaneous');
-    $courseprofilescategory = new core_user\output\myprofile\category('courseprofiles', get_string('courseprofiles'), 'contact');
+    $coursedetailscategory = new core_user\output\myprofile\category('coursedetails', get_string('courseprofiles'), 'contact');
 
     // Add categories.
     $tree->add_category($contactcategory);
     $tree->add_category($miscategory);
     $tree->add_category($reportcategory);
     $tree->add_category($admincategory);
-    $tree->add_category($courseprofilescategory);
+    $tree->add_category($coursedetailscategory);
 
     // Add core nodes.
     // Full profile node.
@@ -193,31 +193,83 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
                 if ($mycourse->category) {
                     context_helper::preload_from_record($mycourse);
                     $ccontext = context_course::instance($mycourse->id);
-                    $linkattributes = null;
-                    if ($mycourse->visible == 0) {
-                        if (!has_capability('moodle/course:viewhiddencourses', $ccontext)) {
-                            continue;
+                    if (!isset($course) || $mycourse->id != $course->id) {
+                        $linkattributes = null;
+                        if ($mycourse->visible == 0) {
+                            if (!has_capability('moodle/course:viewhiddencourses', $ccontext)) {
+                                continue;
+                            }
+                            $linkattributes['class'] = 'dimmed';
                         }
-                        $linkattributes['class'] = 'dimmed';
+                        $params = array('id' => $user->id, 'course' => $mycourse->id);
+                        if ($showallcourses) {
+                            $params['showallcourses'] = 1;
+                        }
+                        $url = new moodle_url('/user/view.php', $params);
+                        $courselisting .= html_writer::link($url, $ccontext->get_context_name(false), $linkattributes);
+                        $courselisting .= ', ';
+                    } else {
+                        $courselisting .= $course->fullname . ", ";
                     }
-                    $params = array('id' => $user->id, 'course' => $mycourse->id);
-                    if ($showallcourses) {
-                        $params['showallcourses'] = 1;
-                    }
-                    $url = new moodle_url('/user/view.php', $params);
-                    $courselisting .= html_writer::link($url, $ccontext->get_context_name(false), $linkattributes);
-                    $courselisting .= ', ';
                 }
                 $shown++;
                 if (!$showallcourses && $shown == $CFG->navcourselimit) {
-                    $url = new moodle_url('/user/profile.php', array('id' => $user->id, 'showallcourses' => 1));
+                    $url = null;
+                    if (isset($course)) {
+                        $url = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $course->id, 'showallcourses' => 1));
+                    } else {
+                        $url = new moodle_url('/user/profile.php', array('id' => $user->id, 'showallcourses' => 1));
+                    }
                     $courselisting .= html_writer::link($url, '...', array('title' => get_string('viewmore')));
                     break;
                 }
             }
-            $node = new core_user\output\myprofile\node('courseprofiles', 'courseprofiles', null, null, null, rtrim($courselisting, ', '));
+            $node = new core_user\output\myprofile\node('coursedetails', 'courseprofiles', get_string('courseprofiles'), null, null, rtrim($courselisting, ', '));
             $tree->add_node($node);
         }
+    }
+
+    if (isset($course)) {
+
+        // Show roles in this course.
+        if ($rolestring = get_user_roles_in_course($user->id, $course->id)) {
+            $node = new core_user\output\myprofile\node('coursedetails', 'roles', get_string('roles'), null, null, $rolestring);
+            $tree->add_node($node);
+        }
+
+        // Show groups this user is in.
+        if (!isset($hiddenfields['groups'])) {
+            $accessallgroups = has_capability('moodle/site:accessallgroups', $context);
+            if ($usergroups = groups_get_all_groups($course->id, $user->id)) {
+                $groupstr = '';
+                foreach ($usergroups as $group) {
+                    if ($course->groupmode == SEPARATEGROUPS and !$accessallgroups and $user->id != $USER->id) {
+                        if (!groups_is_member($group->id, $user->id)) {
+                            continue;
+                        }
+                    }
+
+                    if ($course->groupmode != NOGROUPS) {
+                        $groupstr .= ' <a href="'.$CFG->wwwroot.'/user/index.php?id='.$course->id.'&amp;group='.$group->id.'">'.format_string($group->name).'</a>,';
+                    } else {
+                        $groupstr .= ' '.format_string($group->name); // The user/index.php shows groups only when course in group mode.
+                    }
+                }
+                if ($groupstr !== '') {
+                    $node = new core_user\output\myprofile\node('coursedetails', 'groups', get_string('group'), null, null, rtrim($groupstr, ', '));
+                    $tree->add_node($node);
+                }
+            }
+        }
+
+        if (!isset($hiddenfields['suspended'])) {
+            if ($user->suspended) {
+                $node = new core_user\output\myprofile\node('coursedetails', 'suspended', null, null, null, get_string('suspended', 'auth'));
+                $tree->add_node($node);
+            }
+        }
+
+        echo html_writer::end_tag('dl');
     }
 
     if ($user->icq && !isset($hiddenfields['icqnumber'])) {
