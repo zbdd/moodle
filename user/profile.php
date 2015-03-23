@@ -220,7 +220,6 @@ echo $OUTPUT->header();
 echo '<div class="userprofile">';
 
 // Print the standard content of this page, the basic profile info.
-echo $OUTPUT->heading(fullname($user));
 
 if (is_mnet_remote_user($user)) {
     $sql = "SELECT h.id, h.name, h.wwwroot,
@@ -237,9 +236,7 @@ if (is_mnet_remote_user($user)) {
     echo $OUTPUT->box(get_string('remoteuserinfo', 'mnet', $a), 'remoteuserinfo');
 }
 
-echo '<div class="userprofilebox clearfix"><div class="profilepicture">';
-echo $OUTPUT->user_picture($user, array('size' => 100));
-echo '</div>';
+echo '<div class="userprofilebox clearfix">';
 
 echo '<div class="descriptionbox"><div class="description">';
 // Print the description.
