@@ -252,9 +252,6 @@ if ($user->description && !isset($hiddenfields['description'])) {
 }
 echo '</div>';
 
-// Print the Custom User Fields.
-profile_display_fields($user->id);
-
 // Printing tagged interests.
 if (!empty($CFG->usetags)) {
     if ($interests = tag_get_tags_csv('user', $user->id) ) {

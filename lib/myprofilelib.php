@@ -267,6 +267,23 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         $tree->add_node($node);
     }
 
+    if ($categories = $DB->get_records('user_info_category', null, 'sortorder ASC')) {
+        foreach ($categories as $category) {
+            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
+                foreach ($fields as $field) {
+                    require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                    $newfield = 'profile_field_'.$field->datatype;
+                    $formfield = new $newfield($field->id, $user->id);
+                    if ($formfield->is_visible() and !$formfield->is_empty()) {
+                        $node = new core_user\output\myprofile\node('contact', $formfield->field->shortname,
+                            format_string($formfield->field->name), null, null, $formfield->display_data());
+                        $tree->add_node($node);
+                    }
+                }
+            }
+        }
+    }
+
     // First access. (Why only for sites ?)
     if (!isset($hiddenfields['firstaccess']) && empty($course)) {
         if ($user->firstaccess) {
