@@ -46,12 +46,14 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     $miscategory = new core_user\output\myprofile\category('miscellaneous', get_string('miscellaneous'));
     $reportcategory = new core_user\output\myprofile\category('reports', get_string('reports'), 'miscellaneous');
     $admincategory = new core_user\output\myprofile\category('administration', get_string('administration'), 'miscellaneous');
+    $courseprofilescategory = new core_user\output\myprofile\category('courseprofiles', get_string('courseprofiles'), 'contact');
 
     // Add categories.
     $tree->add_category($contactcategory);
     $tree->add_category($miscategory);
     $tree->add_category($reportcategory);
     $tree->add_category($admincategory);
+    $tree->add_category($courseprofilescategory);
 
     // Add core nodes.
     // Full profile node.
@@ -180,6 +182,42 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         $webpageurl = new moodle_url($url);
         $node = new core_user\output\myprofile\node('contact', 'webpage', get_string('webpage'), null, $webpageurl);
         $tree->add_node($node);
+    }
+
+    if (!isset($hiddenfields['mycourses'])) {
+        $showallcourses = optional_param('showallcourses', 0, PARAM_INT);
+        if ($mycourses = enrol_get_all_users_courses($user->id, true, null, 'visible DESC, sortorder ASC')) {
+            $shown = 0;
+            $courselisting = '';
+            foreach ($mycourses as $mycourse) {
+                if ($mycourse->category) {
+                    context_helper::preload_from_record($mycourse);
+                    $ccontext = context_course::instance($mycourse->id);
+                    $linkattributes = null;
+                    if ($mycourse->visible == 0) {
+                        if (!has_capability('moodle/course:viewhiddencourses', $ccontext)) {
+                            continue;
+                        }
+                        $linkattributes['class'] = 'dimmed';
+                    }
+                    $params = array('id' => $user->id, 'course' => $mycourse->id);
+                    if ($showallcourses) {
+                        $params['showallcourses'] = 1;
+                    }
+                    $url = new moodle_url('/user/view.php', $params);
+                    $courselisting .= html_writer::link($url, $ccontext->get_context_name(false), $linkattributes);
+                    $courselisting .= ', ';
+                }
+                $shown++;
+                if (!$showallcourses && $shown == $CFG->navcourselimit) {
+                    $url = new moodle_url('/user/profile.php', array('id' => $user->id, 'showallcourses' => 1));
+                    $courselisting .= html_writer::link($url, '...', array('title' => get_string('viewmore')));
+                    break;
+                }
+            }
+            $node = new core_user\output\myprofile\node('courseprofiles', 'courseprofiles', null, null, null, rtrim($courselisting, ', '));
+            $tree->add_node($node);
+        }
     }
 
     if ($user->icq && !isset($hiddenfields['icqnumber'])) {

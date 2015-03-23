@@ -41,7 +41,6 @@ require_once($CFG->libdir.'/filelib.php');
 $userid         = optional_param('id', 0, PARAM_INT);
 $edit           = optional_param('edit', null, PARAM_BOOL);    // Turn editing on and off.
 $reset          = optional_param('reset', null, PARAM_BOOL);
-$showallcourses = optional_param('showallcourses', 0, PARAM_INT);
 
 $PAGE->set_url('/user/profile.php', array('id' => $userid));
 
@@ -255,42 +254,6 @@ echo '</div>';
 
 // Print the Custom User Fields.
 profile_display_fields($user->id);
-
-
-if (!isset($hiddenfields['mycourses'])) {
-    if ($mycourses = enrol_get_all_users_courses($user->id, true, null, 'visible DESC, sortorder ASC')) {
-        $shown = 0;
-        $courselisting = '';
-        foreach ($mycourses as $mycourse) {
-            if ($mycourse->category) {
-                context_helper::preload_from_record($mycourse);
-                $ccontext = context_course::instance($mycourse->id);
-                $linkattributes = null;
-                if ($mycourse->visible == 0) {
-                    if (!has_capability('moodle/course:viewhiddencourses', $ccontext)) {
-                        continue;
-                    }
-                    $linkattributes['class'] = 'dimmed';
-                }
-                $params = array('id' => $user->id, 'course' => $mycourse->id);
-                if ($showallcourses) {
-                    $params['showallcourses'] = 1;
-                }
-                $url = new moodle_url('/user/view.php', $params);
-                $courselisting .= html_writer::link($url, $ccontext->get_context_name(false), $linkattributes);
-                $courselisting .= ', ';
-            }
-            $shown++;
-            if (!$showallcourses && $shown == $CFG->navcourselimit) {
-                $url = new moodle_url('/user/profile.php', array('id' => $user->id, 'showallcourses' => 1));
-                $courselisting .= html_writer::link($url, '...', array('title' => get_string('viewmore')));
-                break;
-            }
-        }
-        echo html_writer::tag('dt', get_string('courseprofiles'));
-        echo html_writer::tag('dd', rtrim($courselisting, ', '));
-    }
-}
 
 // Printing tagged interests.
 if (!empty($CFG->usetags)) {
