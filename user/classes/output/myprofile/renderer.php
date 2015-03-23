@@ -94,8 +94,6 @@ class renderer extends \plugin_renderer_base {
         $content = $node->content;
         if (!empty($content)) {
             // There is some content to display below this make this a header.
-            //$return .= \html_writer::start_tag('li');
-            //$return .= \html_writer::start_tag('dl');
             $return = \html_writer::tag('dt', $header);
             $return .= \html_writer::tag('dd', $content);
 
