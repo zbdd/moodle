@@ -38,7 +38,9 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     global $CFG, $USER, $DB;
 
     $usercontext = context_user::instance($user->id, MUST_EXIST);
-    $context = !empty($course) ? context_course::instance($course->id) : context_system::instance();
+    $systemcontext = context_system::instance();
+    $context = !empty($course) ? context_course::instance($course->id) : $systemcontext;
+    $courseid = !empty($course) ? $course->id : SITEID;
 
     $contactcategory = new core_user\output\myprofile\category('contact', get_string('contactdetails'));
     $miscategory = new core_user\output\myprofile\category('miscellaneous', get_string('miscellaneous'));
@@ -63,6 +65,30 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         }
     }
 
+    // Edit profile.
+    if (isloggedin() && !isguestuser($user) && !is_mnet_remote_user($user)) {
+        if (($iscurrentuser || is_siteadmin($USER) || !is_siteadmin($user)) && has_capability('moodle/user:update',
+                    $systemcontext)) {
+            $url = new moodle_url('/user/editadvanced.php', array('id' => $user->id, 'course' => $courseid));
+            $node = new core_user\output\myprofile\node('administration', 'editprofile', get_string('editmyprofile'), null, $url);
+            $tree->add_node($node);
+        } else if ((has_capability('moodle/user:editprofile', $usercontext) && !is_siteadmin($user))
+                   || ($iscurrentuser && has_capability('moodle/user:editownprofile', $systemcontext))) {
+            $userauthplugin = false;
+            if (!empty($user->auth)) {
+                $userauthplugin = get_auth_plugin($user->auth);
+            }
+            if ($userauthplugin && $userauthplugin->can_edit_profile()) {
+                $url = $userauthplugin->edit_profile_url();
+                if (empty($url)) {
+                    $url = new moodle_url('/user/edit.php', array('userid' => $user->id, 'course' => $id));
+                }
+                $node = new core_user\output\myprofile\node('administration', 'editprofile',
+                        get_string('editmyprofile'), null, $url);
+                $tree->add_node($node);
+            }
+        }
+    }
     // Preference page.
     if ($iscurrentuser || is_siteadmin()) {
         $url = new moodle_url('/user/preferences.php', array('userid' => $user->id));
@@ -72,12 +98,11 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     }
 
     // Login as ...
-    $id = !empty($course) ? $course->id : SITEID;
     if (!$user->deleted && !$iscurrentuser &&
                 !\core\session\manager::is_loggedinas() && has_capability('moodle/user:loginas',
                 $context) && !is_siteadmin($user->id)) {
         $url = new moodle_url('/course/loginas.php',
-                array('id' => $id, 'user' => $user->id, 'sesskey' => sesskey()));
+                array('id' => $courseid, 'user' => $user->id, 'sesskey' => sesskey()));
         $node = new  core_user\output\myprofile\node('administration', 'loginas', get_string('loginas'), null, $url);
         $tree->add_node($node);
     }
@@ -88,6 +113,12 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     } else {
         $hiddenfields = array_flip(explode(',', $CFG->hiddenuserfields));
     }
+    if (has_capability('moodle/site:viewuseridentity', $context)) {
+        $identityfields = array_flip(explode(',', $CFG->showuseridentity));
+    } else {
+        $identityfields = array();
+    }
+
     if (!isset($hiddenfields['country']) && $user->country) {
         $node = new core_user\output\myprofile\node('contact', 'country', get_string('country'), null, null,
                 get_string($user->country, 'countries'));

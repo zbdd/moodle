@@ -35,16 +35,48 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function core_badges_myprofile_navigation(\core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
-    if (isguestuser($user) || !$iscurrentuser) {
-        // Since the link is for current user context only show it only when the site viewing the user is the current user.
+    global $CFG, $PAGE, $USER, $SITE;
+    require_once($CFG->dirroot . '/badges/renderer.php');
+    if (empty($CFG->enablebadges) || (!empty($course) || empty($CFG->badges_allowcoursebadges))) {
+        // Y U NO LIKE BADGES ?
         return true;
     }
-    $category = new core_user\output\myprofile\category('badges', get_string('managebadges', 'badges'), null);
+    $category = new core_user\output\myprofile\category('badges', get_string('badges', 'badges'), null);
     $url = new moodle_url("/badges/mybadges.php");
-    $mybadges = new core_user\output\myprofile\node('badges', 'mybadges', get_string('mybadges', 'badges'), null, $url);
 
-    // Add nodes.
-    $category->add_node($mybadges);
+    // Add category.
     $tree->add_category($category);
-    return true;
+
+    // Determine context.
+    if (isloggedin()) {
+        $context = context_user::instance($USER->id);
+    } else {
+        $context = context_system::instance();
+    }
+    $courseid = empty($course) ? 0 : $course->id;
+
+    if ($USER->id == $user->id || has_capability('moodle/badges:viewotherbadges', $context)) {
+        $records = badges_get_user_badges($user->id, $courseid, null, null, null, true);
+        $renderer = new core_badges_renderer($PAGE, '');
+
+        // Local badges.
+        if ($records) {
+            $title = get_string('localbadgesp', 'badges', format_string($SITE->fullname));
+            $content = $renderer->print_badges_list($records, $user->id, true);
+            $localnode = $mybadges = new core_user\output\myprofile\node('badges', 'localbadges', $title, null, null, $content);
+            $tree->add_node($localnode);
+        }
+
+        // External badges.
+        if ($courseid == 0 && !empty($CFG->badges_allowexternalbackpack)) {
+            $backpack = get_backpack_settings($user->id);
+            if (isset($backpack->totalbadges) && $backpack->totalbadges !== 0) {
+                $title = get_string('externalbadgesp', 'badges');
+                $content = $renderer->print_badges_list($backpack->badges, $user->id, true, true);
+                $externalnode = $mybadges = new core_user\output\myprofile\node('badges', 'externalbadges', $title, null, null,
+                    $content);
+                $tree->add_node($externalnode);
+            }
+        }
+    }
 }

@@ -310,11 +310,6 @@ if (!isset($hiddenfields['suspended'])) {
     }
 }
 
-require_once($CFG->libdir . '/badgeslib.php');
-if (!empty($CFG->enablebadges)) {
-    profile_display_badges($user->id);
-}
-
 echo html_writer::end_tag('dl');
 echo "</div></div>"; // Closing desriptionbox and userprofilebox.
 
