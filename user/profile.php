@@ -260,13 +260,6 @@ if (!empty($CFG->usetags)) {
     }
 }
 
-if (!isset($hiddenfields['suspended'])) {
-    if ($user->suspended) {
-        echo html_writer::tag('dt', '&nbsp;');
-        echo html_writer::tag('dd', get_string('suspended', 'auth'));
-    }
-}
-
 echo html_writer::end_tag('dl');
 echo "</div></div>"; // Closing desriptionbox and userprofilebox.
 
