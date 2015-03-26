@@ -22,21 +22,38 @@ Feature: Access to full profiles of users
   Scenario: Viewing full profiles with default settings
     When I log in as "student1"
     And I follow "Course 1"
-    # Another student's full profile is not visible
-    And I navigate to "Participants" node in "Current course > C1"
-    And I follow "Student 2"
-    Then I should not see "Full profile"
-    # Teacher's full profile is visible
-    And I navigate to "Participants" node in "Current course > C1"
-    And I follow "Teacher 1"
+    And I follow "Participants"
+    # Should be able to view my own full profile.
+    And I click on "Student 1" "link" in the "generaltable" "table"
+    And I should see "Full profile"
+    And I should see "Last access to course"
+    And I should see "My blog entries"
+    And I should see "My forum posts"
+    And I should see "My forum discussions"
+    And I should see "My profile settings"
+    And I should see "My badges"
+    And I should see "Roles"
+    And I should see "Edit profile"
+    And I should see "Preferences"
     And I follow "Full profile"
     And I should see "First access to site"
-    # Own full profile is visible
+    # Should NOT be able to view the full profile of another student.
+    And I follow "My courses"
     And I follow "Course 1"
-    And I navigate to "Participants" node in "Current course > C1"
-    And I click on "Student 1" "link" in the "#participants" "css_element"
+    And I follow "Participants"
+    And I click on "Student 2" "link" in the "generaltable" "table"
+    And I should not see "Full profile"
+    And I should see "View all blog entries by Student 2"
+    And I should see "Forum posts by Student 2"
+    And I should see "Forum discussions by Student 2"
+    # Should be able to see teachers full profile.
+    And I follow "My courses"
+    And I follow "Course 1"
+    And I follow "Participants"
+    And I click on "Teacher 1" "link" in the "generaltable" "table"
+    And I should see "Full profile"
     And I follow "Full profile"
-    And I should see "First access to site"
+    And I should see  "First access to site"
 
   @javascript
   Scenario: Viewing full profiles with forceloginforprofiles off
